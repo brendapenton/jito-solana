@@ -17,13 +17,13 @@ serde = { workspace = true, features = ["derive", "rc"] }
 serde_bytes = { workspace = true }
 serde_derive = { workspace = true }
 sha2 = { workspace = true }
-solana-frozen-abi-macro = { workspace = true }
+solana-frozen-abi-macro = { path = "macro" } # Corrected path to the macro directory
 thiserror = { workspace = true }
+generic-array = { version = "1.1.0", optional = true }
 
 [target.'cfg(not(target_os = "solana"))'.dependencies]
 block-buffer = { workspace = true }
 either = { workspace = true, features = ["use_std"] }
-generic-array = { workspace = true, features = ["serde", "more_lengths"] }
 im = { workspace = true, features = ["rayon", "serde"] }
 memmap2 = { workspace = true }
 subtle = { workspace = true }

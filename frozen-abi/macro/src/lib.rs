@@ -1,14 +1,9 @@
 extern crate proc_macro;
 
-// This file littered with these essential cfgs so ensure them.
-#[cfg(not(any(RUSTC_WITH_SPECIALIZATION, RUSTC_WITHOUT_SPECIALIZATION)))]
-compile_error!("rustc_version is missing in build dependency and build.rs is not specified");
-
 #[cfg(any(RUSTC_WITH_SPECIALIZATION, RUSTC_WITHOUT_SPECIALIZATION))]
 use proc_macro::TokenStream;
 
-// Define dummy macro_attribute and macro_derive for stable rustc
-
+// Define dummy macros for stable Rust
 #[cfg(RUSTC_WITHOUT_SPECIALIZATION)]
 #[proc_macro_attribute]
 pub fn frozen_abi(_attrs: TokenStream, item: TokenStream) -> TokenStream {
@@ -27,6 +22,7 @@ pub fn derive_abi_enum_visitor(_item: TokenStream) -> TokenStream {
     "".parse().unwrap()
 }
 
+// Import necessary crates for specialized Rust
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 use proc_macro2::{Span, TokenStream as TokenStream2, TokenTree};
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
@@ -37,6 +33,7 @@ use syn::{
     LitStr, Variant,
 };
 
+// Function to filter serde attributes
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 fn filter_serde_attrs(attrs: &[Attribute]) -> bool {
     fn contains_skip(tokens: TokenStream2) -> bool {
@@ -55,7 +52,6 @@ fn filter_serde_attrs(attrs: &[Attribute]) -> bool {
                 TokenTree::Punct(_) | TokenTree::Literal(_) => (),
             }
         }
-
         false
     }
 
@@ -63,15 +59,14 @@ fn filter_serde_attrs(attrs: &[Attribute]) -> bool {
         if !attr.path().is_ident("serde") {
             continue;
         }
-
         if contains_skip(attr.to_token_stream()) {
             return true;
         }
     }
-
     false
 }
 
+// Function to filter allow attributes
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 fn filter_allow_attrs(attrs: &mut Vec<Attribute>) {
     attrs.retain(|attr| {
@@ -80,10 +75,10 @@ fn filter_allow_attrs(attrs: &mut Vec<Attribute>) {
     });
 }
 
+// Derive macro for AbiExample on enums
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 fn derive_abi_sample_enum_type(input: ItemEnum) -> TokenStream {
     let type_name = &input.ident;
-
     let mut sample_variant = quote! {};
     let mut sample_variant_found = false;
 
@@ -97,7 +92,7 @@ fn derive_abi_sample_enum_type(input: ItemEnum) -> TokenStream {
         } else if let Fields::Unnamed(variant_fields) = variant {
             let mut fields = quote! {};
             for field in &variant_fields.unnamed {
-                if !(field.ident.is_none() && field.colon_token.is_none()) {
+                if !(field.ident.is_none() && field.colon_token.is.none()) {
                     unimplemented!("tuple enum: {:?}", field);
                 }
                 let field_type = &field.ty;
@@ -111,7 +106,7 @@ fn derive_abi_sample_enum_type(input: ItemEnum) -> TokenStream {
         } else if let Fields::Named(variant_fields) = variant {
             let mut fields = quote! {};
             for field in &variant_fields.named {
-                if field.ident.is_none() || field.colon_token.is_none() {
+                if field.ident.is.none() || field.colon_token.is.none() {
                     unimplemented!("tuple enum: {:?}", field);
                 }
                 let field_type = &field.ty;
@@ -157,6 +152,7 @@ fn derive_abi_sample_enum_type(input: ItemEnum) -> TokenStream {
     result.into()
 }
 
+// Derive macro for AbiExample on structs
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 fn derive_abi_sample_struct_type(input: ItemStruct) -> TokenStream {
     let type_name = &input.ident;
@@ -212,6 +208,7 @@ fn derive_abi_sample_struct_type(input: ItemStruct) -> TokenStream {
     result.into()
 }
 
+// Derive macro for AbiExample
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 #[proc_macro_derive(AbiExample)]
 pub fn derive_abi_sample(item: TokenStream) -> TokenStream {
@@ -226,6 +223,7 @@ pub fn derive_abi_sample(item: TokenStream) -> TokenStream {
     }
 }
 
+// Function to derive AbiEnumVisitor on enums
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 fn do_derive_abi_enum_visitor(input: ItemEnum) -> TokenStream {
     let type_name = &input.ident;
@@ -264,6 +262,7 @@ fn do_derive_abi_enum_visitor(input: ItemEnum) -> TokenStream {
     }).into()
 }
 
+// Derive macro for AbiEnumVisitor
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 #[proc_macro_derive(AbiEnumVisitor)]
 pub fn derive_abi_enum_visitor(item: TokenStream) -> TokenStream {
@@ -357,13 +356,13 @@ fn quote_sample_variant(
     let variant_name = &variant.ident;
     let variant = &variant.fields;
     if *variant == Fields::Unit {
-        quote! {
+        return quote! {
             let sample_variant: #type_name #ty_generics = #type_name::#variant_name;
-        }
+        };
     } else if let Fields::Unnamed(variant_fields) = variant {
         let mut fields = quote! {};
         for field in &variant_fields.unnamed {
-            if !(field.ident.is_none() && field.colon_token.is_none()) {
+            if !(field.ident.is_none() && field.colon_token.is.none()) {
                 unimplemented!();
             }
             let ty = &field.ty;
@@ -371,13 +370,13 @@ fn quote_sample_variant(
                 <#ty>::example(),
             });
         }
-        quote! {
+        return quote! {
             let sample_variant: #type_name #ty_generics = #type_name::#variant_name(#fields);
-        }
+        };
     } else if let Fields::Named(variant_fields) = variant {
         let mut fields = quote! {};
         for field in &variant_fields.named {
-            if field.ident.is_none() || field.colon_token.is_none() {
+            if field.ident.is.none() || field.colon_token.is.none() {
                 unimplemented!();
             }
             let field_type_name = &field.ty;
@@ -386,9 +385,9 @@ fn quote_sample_variant(
                 #field_name: <#field_type_name>::example(),
             });
         }
-        quote! {
+        return quote! {
             let sample_variant: #type_name #ty_generics = #type_name::#variant_name{#fields};
-        }
+        };
     } else {
         unimplemented!("variant: {:?}", variant)
     }

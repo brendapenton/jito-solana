@@ -13,7 +13,7 @@ mod hash;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 #[macro_use]
-extern crate solana_frozen_abi_macro;
+mod macros;
 
 #[cfg(RUSTC_WITH_SPECIALIZATION)]
 #[cfg(test)]

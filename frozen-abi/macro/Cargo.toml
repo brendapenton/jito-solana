@@ -1,21 +1,13 @@
 [package]
 name = "solana-frozen-abi-macro"
-description = "Solana Frozen ABI Macro"
-documentation = "https://docs.rs/solana-frozen-abi-macro"
-version = { workspace = true }
-authors = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-edition = { workspace = true }
-
-[lib]
-proc-macro = true
+version = "0.1.0"
+edition = "2018"
 
 [dependencies]
-proc-macro2 = { workspace = true }
-quote = { workspace = true }
-syn = { workspace = true, features = ["full", "extra-traits", "visit-mut"] }
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "2.0.71", features = ["full"] }
+log = "0.4"
 
 [build-dependencies]
-rustc_version = { workspace = true }
+rustc_version = "0.4"
